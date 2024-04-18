@@ -8,25 +8,7 @@ type Item = {
   checked: boolean
 }
 
-const updateItem = (item: Item): void => {
-  const updatedItem = findItemInList(item)
-  if (updatedItem) {
-    toggleItemChecked(updatedItem)
-    setToStorage(storageItems.value)
-  }
-}
-
-const findItemInList = (item: Item): Item | undefined => {
-  return storageItems.value.find((itemInList: Item) => itemInList.title === item.title)
-}
-
-const toggleItemChecked = (item: Item): void => {
-  item.checked = !item.checked
-}
-
-const sortedList = computed(() =>
-  [...storageItems.value].sort((a, b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0))
-)
+const storageItems: Ref<Item[]> = ref([])
 
 const setToStorage = (items: Item[]): void => {
   localStorage.setItem('list-items', JSON.stringify(items))
@@ -40,10 +22,7 @@ const getFromStorage = (): Item[] | [] => {
   return []
 }
 
-const storageItems: Ref<Item[]> = ref([])
-
 const initListItems = (): void => {
-  console.log('storageItems :>> ', storageItems.value?.length)
   if (storageItems.value?.length === 0) {
     const listItems = [
       { title: 'Make a todo list app', checked: true },
@@ -62,16 +41,38 @@ const initListItems = (): void => {
   }
 }
 
+const sortedList = computed(() =>
+  [...storageItems.value].sort((a, b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0))
+)
+
+const updateItem = (item: Item): void => {
+  const updatedItem = findItemInList(item)
+  if (updatedItem) {
+    toggleItemChecked(updatedItem)
+    setToStorage(storageItems.value)
+  }
+}
+
+const findItemInList = (item: Item): Item | undefined => {
+  return storageItems.value.find((itemInList: Item) => itemInList.title === item.title)
+}
+
+const toggleItemChecked = (item: Item): void => {
+  item.checked = !item.checked
+}
+
 onMounted(() => {
-  initListItems()
   storageItems.value = getFromStorage()
+  initListItems()
 })
 </script>
 
 <template>
   <ul>
-    <li :key="item.title" v-for="item in sortedList" @click.prevent="updateItem(item)">
-      <ListItem :is-checked="item.checked">{{ item.title }}</ListItem>
+    <li :key="item.title" v-for="item in sortedList">
+      <ListItem :initial-is-checked="item.checked" @change="updateItem(item)">{{
+        item.title
+      }}</ListItem>
     </li>
   </ul>
 </template>
